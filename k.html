@@ -1,0 +1,2182 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="VIP Men">
+    <meta name="theme-color" content="#000000">
+    <title>VIP Men Saloon Admin</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <style>
+        /* ========== ΣΤΥΛ ========== */
+        :root {
+            --bg-dark: #000000;         
+            --bg-card: #151517;         
+            --gold-primary: #C3A364;    
+            --warning: #d98e36;         
+            --text-main: #f0f0f0;
+            --text-muted: #888888;      
+            --danger: #b33939;          
+            --success: #3c7a52;         
+            --info: #4a6c8c;
+            --border: rgba(195, 163, 100, 0.2); 
+            --border-light: rgba(255, 255, 255, 0.08); 
+            --radius: 12px;             
+        }
+
+        * { 
+            box-sizing: border-box; 
+            font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif; 
+            -webkit-tap-highlight-color: transparent; 
+            touch-action: manipulation; 
+        }
+
+        body { 
+            background-color: var(--bg-dark); 
+            color: var(--text-main); 
+            margin: 0; 
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); 
+            display: flex; 
+            justify-content: center; 
+            -webkit-font-smoothing: antialiased; 
+            letter-spacing: 0.2px; 
+            overscroll-behavior-y: none;
+            overflow-x: hidden; 
+            width: 100%;
+        }
+
+        #login-screen { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: var(--bg-dark); 
+            z-index: 99999; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 20px; 
+            overflow-y: auto; 
+        }
+        .login-box { 
+            background: var(--bg-card); 
+            border: 1px solid var(--border); 
+            border-radius: var(--radius); 
+            padding: 40px 25px; 
+            width: 100%; 
+            max-width: 340px; 
+            text-align: center; 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5); 
+        }
+        .login-box h1 { 
+            margin: 0 0 5px 0; 
+            color: var(--gold-primary); 
+            font-size: 1.6rem; 
+            letter-spacing: 3px; 
+            font-weight: 300; 
+            font-family: "Didot", "Bodoni MT", serif; 
+            text-transform: uppercase; 
+        }
+        .login-box p { 
+            color: var(--text-muted); 
+            margin-bottom: 30px; 
+            font-size: 0.85rem; 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+        }
+        
+        .pin-input { 
+            width: 100%; 
+            background: var(--bg-dark); 
+            border: 1px solid var(--border-light); 
+            color: var(--gold-primary); 
+            border-radius: 8px; 
+            padding: 15px; 
+            font-size: 32px; 
+            text-align: center; 
+            margin-bottom: 30px; 
+            outline: none; 
+            letter-spacing: 20px; 
+            font-weight: 300; 
+            -webkit-appearance: none; 
+        }
+        .pin-input:focus { 
+            border-color: var(--gold-primary); 
+        }
+        .btn-login { 
+            width: 100%; 
+            background: var(--gold-primary); 
+            color: #000; 
+            border: none; 
+            border-radius: 8px; 
+            padding: 16px; 
+            font-size: 0.95rem; 
+            font-weight: 600; 
+            text-transform: uppercase; 
+            letter-spacing: 2px; 
+            cursor: pointer; 
+            transition: 0.3s; 
+        }
+        .btn-login:active { 
+            opacity: 0.8; 
+            transform: scale(0.98); 
+        }
+
+        .dashboard { 
+            width: 100%; 
+            max-width: 600px; 
+            display: none; 
+            flex-direction: column; 
+            padding: 15px; 
+            gap: 15px; 
+            padding-bottom: 60px; 
+            margin: 0 auto; 
+            overflow-x: hidden; 
+        }
+
+        .top-nav { 
+            position: sticky; 
+            top: env(safe-area-inset-top, 10px); 
+            z-index: 100; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 12px; 
+            background-color: rgba(21, 21, 23, 0.85); 
+            backdrop-filter: blur(15px); 
+            -webkit-backdrop-filter: blur(15px); 
+            padding: 15px; 
+            border-radius: var(--radius); 
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); 
+            border: 1px solid var(--border-light); 
+            width: 100%; 
+        }
+        .nav-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+        .logo-area { 
+            font-size: 1.1rem; 
+            font-weight: 300; 
+            color: var(--gold-primary); 
+            letter-spacing: 2px; 
+            font-family: "Didot", "Bodoni MT", serif; 
+        }
+        .header-actions { 
+            display: flex; 
+            gap: 12px; 
+            align-items: center; 
+        }
+        .btn-icon { 
+            background: transparent; 
+            border: none; 
+            color: var(--gold-primary); 
+            font-size: 1.4rem; 
+            cursor: pointer; 
+            padding: 5px; 
+        }
+        .btn-logout { 
+            background: transparent; 
+            color: var(--text-muted); 
+            border: 1px solid var(--border-light); 
+            border-radius: 6px; 
+            padding: 8px 12px; 
+            font-size: 0.75rem; 
+            cursor: pointer; 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+        }
+
+        .barber-tabs { 
+            display: flex; 
+            gap: 8px; 
+            background: var(--bg-dark); 
+            padding: 5px; 
+            border-radius: 10px; 
+            border: 1px solid var(--border-light); 
+            width: 100%; 
+        }
+        .btn-tab { 
+            background: transparent; 
+            color: var(--text-muted); 
+            border: none; 
+            border-radius: 6px; 
+            padding: 12px 0; 
+            font-weight: 400; 
+            font-size: 0.9rem; 
+            flex: 1; 
+            text-align: center; 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+            transition: 0.3s; 
+            cursor: pointer; 
+        }
+        .btn-tab.active { 
+            background: var(--bg-card); 
+            color: var(--gold-primary); 
+            font-weight: 600; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3); 
+            border: 1px solid var(--border-light); 
+        }
+
+        .tools-row { 
+            display: flex; 
+            gap: 10px; 
+            position: relative; 
+            width: 100%; 
+        }
+        .search-container { 
+            flex: 1; 
+            position: relative; 
+            min-width: 0; 
+        }
+        .search-input { 
+            width: 100%; 
+            background: var(--bg-dark); 
+            border: 1px solid var(--border-light); 
+            border-radius: 10px; 
+            color: var(--text-main); 
+            padding: 12px 15px 12px 35px; 
+            font-size: 16px; 
+            outline: none; 
+            transition: 0.3s; 
+            -webkit-appearance: none; 
+        }
+        .search-input:focus { 
+            border-color: var(--gold-primary); 
+        }
+        .search-icon { 
+            position: absolute; 
+            left: 10px; 
+            top: 50%; 
+            transform: translateY(-50%); 
+            color: var(--text-muted); 
+            font-size: 1rem; 
+        }
+        .btn-free { 
+            background: rgba(60, 122, 82, 0.15); 
+            color: var(--success); 
+            border: 1px solid rgba(60, 122, 82, 0.4); 
+            border-radius: 10px; 
+            padding: 0 15px; 
+            font-weight: 400; 
+            font-size: 0.85rem; 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+            cursor: pointer; 
+            white-space: nowrap; 
+        }
+
+        .search-results { 
+            display: none; 
+            position: absolute; 
+            top: 100%; 
+            left: 0; 
+            width: 100%; 
+            background: var(--bg-card); 
+            border: 1px solid var(--border); 
+            border-radius: 10px; 
+            margin-top: 5px; 
+            max-height: 250px; 
+            overflow-y: auto; 
+            z-index: 200; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8); 
+        }
+        .search-result-item { 
+            padding: 15px; 
+            border-bottom: 1px solid var(--border-light); 
+            display: flex; 
+            flex-direction: column; 
+            gap: 4px; 
+            cursor: pointer; 
+        }
+        .search-result-item:last-child { 
+            border-bottom: none; 
+        }
+        .res-name { 
+            font-weight: 400; 
+            color: var(--gold-primary); 
+            font-size: 0.95rem; 
+        }
+        .res-details { 
+            font-size: 0.75rem; 
+            color: var(--text-muted); 
+            text-transform: uppercase; 
+        }
+
+        .calendar-wrapper { 
+            background: var(--bg-card); 
+            border: 1px solid var(--border-light); 
+            border-radius: var(--radius); 
+            padding: 12px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px; 
+            width: 100%; 
+        }
+        .calendar-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 0 5px; 
+        }
+        .calendar-title { 
+            font-size: 0.95rem; 
+            font-weight: 400; 
+            color: var(--text-main); 
+            margin: 0; 
+            text-transform: uppercase; 
+            letter-spacing: 2px; 
+        }
+        .date-picker-container { 
+            position: relative; 
+            width: 32px; 
+            height: 32px; 
+            flex-shrink: 0; 
+        }
+        .cal-icon-btn { 
+            background: var(--bg-dark); 
+            border: 1px solid var(--border-light); 
+            border-radius: 6px; 
+            width: 100%; 
+            height: 100%; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            font-size: 1.1rem; 
+            color: var(--gold-primary); 
+        }
+        .native-date-input { 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            opacity: 0; 
+            cursor: pointer; 
+        }
+        
+        .calendar-ribbon { 
+            display: flex; 
+            gap: 8px; 
+            overflow-x: auto; 
+            -webkit-overflow-scrolling: touch; 
+            scrollbar-width: none; 
+            padding-bottom: 5px; 
+            scroll-behavior: smooth; 
+            overscroll-behavior-x: contain; 
+            width: 100%; 
+        }
+        .calendar-ribbon::-webkit-scrollbar { 
+            display: none; 
+        }
+        .ribbon-day { 
+            min-width: 65px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 10px 5px; 
+            background: var(--bg-dark); 
+            border: 1px solid var(--border-light); 
+            border-radius: 10px; 
+            cursor: pointer; 
+            flex-shrink: 0; 
+            transition: all 0.2s; 
+        }
+        .ribbon-day.active { 
+            background: var(--gold-primary); 
+            color: #000; 
+            border-color: var(--gold-primary); 
+            transform: scale(1.03); 
+            box-shadow: 0 4px 10px rgba(195, 163, 100, 0.3); 
+        }
+        .ribbon-day.today { 
+            border-color: var(--info); 
+        }
+        .ribbon-day.sunday { 
+            opacity: 0.25; 
+            cursor: not-allowed; 
+            border-color: transparent !important; 
+        }
+        .ribbon-day.sunday .ribbon-dow { 
+            color: var(--danger); 
+        }
+        
+        .ribbon-dow { 
+            font-size: 0.7rem; 
+            font-weight: 600; 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+            margin-bottom: 2px; 
+        }
+        .ribbon-date { 
+            font-size: 1.4rem; 
+            font-weight: 300; 
+            margin-bottom: 2px; 
+        }
+        .ribbon-month { 
+            font-size: 0.65rem; 
+            font-weight: 400; 
+            text-transform: uppercase; 
+        }
+        .ribbon-day.active .ribbon-dow, 
+        .ribbon-day.active .ribbon-month { 
+            color: #000; 
+        }
+
+        .stats-dashboard { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 10px; 
+        }
+        .stat-box { 
+            background: var(--bg-card); 
+            border: 1px solid var(--border-light); 
+            border-radius: var(--radius); 
+            padding: 15px; 
+            text-align: center; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 5px; 
+        }
+        .stat-label { 
+            font-size: 0.7rem; 
+            color: var(--text-muted); 
+            font-weight: 400; 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+        }
+        .stat-value { 
+            font-size: 1.4rem; 
+            font-weight: 300; 
+        }
+        .val-total { 
+            color: var(--text-main); 
+            cursor: pointer; 
+        }
+        .val-done { 
+            color: var(--success); 
+        }
+
+        .schedule-header-row { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-top: 5px; 
+        }
+        .schedule-title { 
+            font-size: 0.9rem; 
+            font-weight: 400; 
+            color: var(--text-muted); 
+            margin: 0; 
+            text-transform: uppercase; 
+            letter-spacing: 2px; 
+        }
+        .btn-add-time { 
+            background: transparent; 
+            color: var(--gold-primary); 
+            border: 1px solid var(--border); 
+            border-radius: 8px; 
+            padding: 8px 14px; 
+            font-weight: 400; 
+            font-size: 0.75rem; 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+            cursor: pointer; 
+            transition: 0.2s; 
+            white-space: nowrap; 
+            position: relative;
+            z-index: 10;
+        }
+        .btn-add-time:active { 
+            background: var(--border-light); 
+        }
+
+        .schedule-container { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 12px; 
+            width: 100%; 
+        }
+        
+        .slot-card { 
+            display: flex; 
+            align-items: center; 
+            background: var(--bg-card); 
+            border-radius: var(--radius); 
+            padding: 15px; 
+            gap: 12px; 
+            border: 2px solid transparent;
+            transition: all 0.3s ease; 
+            box-shadow: 0 0 0 rgba(0,0,0,0);
+            width: 100%; 
+            flex-wrap: wrap; 
+        }
+
+        .slot-card.approved {
+            border-color: var(--gold-primary);
+            box-shadow: 0 0 15px rgba(195, 163, 100, 0.5);
+        }
+
+        .slot-card.completed {
+            border-color: var(--success);
+            box-shadow: 0 0 15px rgba(60, 122, 82, 0.5);
+            opacity: 0.8;
+        }
+
+        .slot-card.break {
+            border-color: var(--danger);
+            background-color: #2a1a1a;
+            box-shadow: 0 0 15px rgba(179, 57, 57, 0.5);
+        }
+        .slot-card.break .name-input,
+        .slot-card.break .comment-input,
+        .slot-card.break .time-badge {
+            color: #ffaaaa !important;
+        }
+
+        .slot-card.pending {
+            border-color: var(--warning);
+            box-shadow: 0 0 15px rgba(217, 142, 54, 0.3);
+        }
+
+        .slot-card.permanent {
+            border-color: var(--info);
+            box-shadow: 0 0 15px rgba(74, 108, 140, 0.5);
+        }
+
+        @keyframes highlight-glow { 
+            0% { box-shadow: 0 0 0 0 rgba(195, 163, 100, 0.7); border-color: var(--gold-primary); } 
+            70% { box-shadow: 0 0 0 15px rgba(195, 163, 100, 0); border-color: var(--gold-primary); } 
+            100% { box-shadow: 0 0 0 0 rgba(195, 163, 100, 0); border-color: var(--border-light); } 
+        }
+        .highlight-focus { animation: highlight-glow 2s ease-out; }
+
+        .time-badge { font-weight: 400; font-size: 1.1rem; color: var(--text-main); width: 50px; text-align: left; flex-shrink: 0; }
+        
+        .status-indicator { width: 4px; height: 44px; border-radius: 2px; background-color: var(--border-light); transition: all 0.3s ease; flex-shrink: 0; }
+        .slot-card.pending .status-indicator { background-color: var(--warning); box-shadow: 0 0 8px rgba(217, 142, 54, 0.4); }
+        .slot-card.approved .status-indicator { background-color: var(--gold-primary); box-shadow: 0 0 8px rgba(195, 163, 100, 0.4); }
+        .slot-card.completed .status-indicator { background-color: var(--success); }
+        .slot-card.break .status-indicator { background-color: var(--danger); }
+        .slot-card.permanent .status-indicator { background-color: var(--info); box-shadow: 0 0 8px rgba(74, 108, 140, 0.5);}
+
+        .slot-content { flex: 1; display: flex; flex-direction: column; gap: 5px; min-width: 150px; }
+        .slot-input { width: 100%; background: transparent; border: none; outline: none; padding: 2px 0; -webkit-appearance: none; transition: all 0.3s ease; font-size: 16px; }
+        .name-input { color: var(--text-main); font-weight: 400; font-size: 1.1rem; }
+        .name-input::placeholder { color: #555; font-weight: 300; }
+        
+        .details-row { display: flex; gap: 15px; align-items: center; margin-top: 6px; width: 100%; }
+        .comment-input { 
+            flex: 1; 
+            color: #d4c8a8; 
+            font-weight: 300; 
+            font-size: 16px; 
+            font-style: italic; 
+            background: #1e1e1e; 
+            padding: 8px 12px; 
+            border-radius: 8px; 
+            border: 1px solid #4a3e2a;
+            transition: 0.2s;
+        }
+        .comment-input:focus {
+            border-color: var(--gold-primary);
+            background: #2a2a2a;
+        }
+        .comment-input::placeholder { color: #666; }
+
+        .slot-card.pending .name-input { color: var(--warning); }
+        .slot-card.approved .name-input { color: var(--gold-primary); }
+        .slot-card.break .name-input { color: var(--danger); }
+        .slot-card.completed { opacity: 0.8; }
+        .slot-card.completed .name-input, 
+        .slot-card.completed .comment-input { color: var(--text-muted); text-decoration: line-through; }
+
+        /* FIX 2: Layout για τα κουμπιά δράσης για να χωράει και το 6ο κουμπί (τηλέφωνο) */
+        .actions-grid { 
+            display: flex; 
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 8px; 
+            margin-left: auto; 
+        }
+        .action-btn { 
+            background: var(--bg-dark); 
+            border: 1px solid var(--border-light); 
+            width: 38px; 
+            height: 38px; 
+            border-radius: 8px; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            color: var(--text-muted); 
+            font-size: 1rem; 
+            font-weight: 300; 
+            transition: 0.2s; 
+            cursor: pointer; 
+        }
+        .action-btn:active { 
+            background: var(--border-light); 
+            transform: scale(0.95); 
+        }
+        .btn-approve.is-active { 
+            border-color: var(--gold-primary); 
+            color: var(--gold-primary); 
+            background: rgba(195, 163, 100, 0.1); 
+        }
+        .btn-complete.is-active { 
+            border-color: var(--success); 
+            color: var(--success); 
+            background: rgba(60, 122, 82, 0.1); 
+        }
+        .btn-perm.is-active { 
+            border-color: var(--info); 
+            color: var(--info); 
+            background: rgba(74, 108, 140, 0.1); 
+        }
+        .btn-danger { 
+            color: #888; 
+        }
+        .btn-danger:active { 
+            color: var(--danger); 
+            border-color: var(--danger); 
+            background: rgba(179, 57, 57, 0.1); 
+        }
+
+        .is-readonly .slot-input { pointer-events: none; }
+        .is-readonly .actions-grid { display: none !important; }
+        .is-readonly .details-row { pointer-events: none; }
+
+        /* FIX 1: Centered modal to prevent Safari bottom-bar overlap */
+        .modal-overlay { 
+            display: none; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(0,0,0,0.8); 
+            backdrop-filter: blur(10px); 
+            -webkit-backdrop-filter: blur(10px); 
+            z-index: 1000; 
+            align-items: center; 
+            justify-content: center; 
+            overflow-y: auto; 
+            padding: 15px; 
+        }
+        .modal { 
+            background: #111113; 
+            width: 100%; 
+            max-width: 500px; 
+            padding: 25px 20px; 
+            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
+            border-radius: 20px; 
+            border: 1px solid var(--border-light); 
+            max-height: 85vh; 
+            display: flex; 
+            flex-direction: column; 
+        }
+        @keyframes slideUp { 
+            from { transform: translateY(50px); opacity: 0; } 
+            to { transform: translateY(0); opacity: 1; } 
+        }
+        
+        .modal-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 25px; 
+        }
+        .modal-header h3 { 
+            margin: 0; 
+            font-size: 1rem; 
+            font-weight: 400; 
+            text-transform: uppercase; 
+            letter-spacing: 2px; 
+            color: var(--gold-primary); 
+        }
+        .close-modal { 
+            background: var(--bg-dark); 
+            border: 1px solid var(--border-light); 
+            border-radius: 50%; 
+            color: var(--text-main); 
+            font-size: 1.2rem; 
+            width: 36px; 
+            height: 36px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-weight: 300; 
+            cursor: pointer; 
+        }
+        
+        .time-select-container { 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            gap: 10px; 
+            margin-bottom: 30px; 
+        }
+        
+        /* FIX 3: Removed aggressive appearance removal so touch hitboxes work natively */
+        .time-select { 
+            background: var(--bg-dark); 
+            border: 1px solid var(--border-light); 
+            border-radius: 10px; 
+            color: var(--gold-primary); 
+            padding: 10px; 
+            font-size: 1.2rem; 
+            font-weight: 400; 
+            text-align: center; 
+            outline: none; 
+            cursor: pointer; 
+            flex: 1; 
+            height: 55px;
+        }
+        .time-select:focus { 
+            border-color: var(--gold-primary); 
+        }
+
+        .settings-list, .free-slots-list { 
+            overflow-y: auto; 
+            -webkit-overflow-scrolling: touch; 
+            margin-bottom: 20px; 
+        }
+        .settings-list { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 12px; 
+        }
+        .free-slots-list { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px; 
+        }
+        .free-slot-item { 
+            background: var(--bg-dark); 
+            border: 1px solid var(--border-light); 
+            border-radius: 10px; 
+            padding: 15px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            cursor: pointer; 
+        }
+        .free-slot-item:hover { 
+            border-color: var(--success); 
+        }
+        .free-slot-day { 
+            font-weight: 300; 
+            color: var(--text-main); 
+            font-size: 0.95rem; 
+            text-transform: uppercase; 
+        }
+        .free-slot-time { 
+            color: var(--success); 
+            font-weight: 400; 
+            font-size: 1.1rem; 
+        }
+        
+        .checkbox-wrapper { 
+            background: var(--bg-dark); 
+            border: 1px solid var(--border-light); 
+            border-radius: 10px; 
+            padding: 12px; 
+            display: flex; 
+            align-items: center; 
+            gap: 15px; 
+        }
+        input[type="checkbox"] { 
+            width: 22px; 
+            height: 22px; 
+            accent-color: var(--gold-primary); 
+        }
+        
+        .btn-full { 
+            width: 100%; 
+            background: var(--gold-primary); 
+            color: #000; 
+            border: none; 
+            border-radius: 10px; 
+            padding: 18px; 
+            font-size: 0.95rem; 
+            font-weight: 600; 
+            text-transform: uppercase; 
+            letter-spacing: 2px; 
+            margin-bottom: 12px; 
+            cursor: pointer; 
+        }
+        .btn-full:active { 
+            opacity: 0.8; 
+        }
+        .btn-outline { 
+            width: 100%; 
+            background: var(--bg-dark); 
+            color: var(--text-main); 
+            border: 1px solid var(--border-light); 
+            border-radius: 10px; 
+            padding: 16px; 
+            font-size: 0.85rem; 
+            font-weight: 400; 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+            margin-bottom: 10px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 10px; 
+            cursor: pointer; 
+        }
+        .btn-danger-outline { 
+            width: 100%; 
+            background: var(--bg-dark); 
+            color: var(--danger); 
+            border: 1px solid rgba(179, 57, 57, 0.4); 
+            border-radius: 10px; 
+            padding: 16px; 
+            font-size: 0.85rem; 
+            font-weight: 400; 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+            cursor: pointer; 
+            margin-top: 10px; 
+        }
+        
+        .conn-status { 
+            font-size: 0.75rem; 
+            color: var(--success); 
+            text-align: center; 
+            margin-top: 10px; 
+            letter-spacing: 1px; 
+            display: none; 
+            font-weight: bold; 
+        }
+
+        /* Επιπλέον fixes για iPhone */
+        @media (max-width: 480px) {
+            .slot-card {
+                padding: 12px;
+                gap: 8px;
+            }
+            .actions-grid {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: flex-end;
+                gap: 4px;
+                width: 100%;
+                margin-left: 0;
+                margin-top: 8px;
+            }
+            .action-btn {
+                width: 35px;
+                height: 35px;
+            }
+            .time-badge {
+                width: 45px;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<datalist id="clients-list"></datalist>
+
+<div id="login-screen">
+    <div class="login-box">
+        <h1>VIP MEN SALOON</h1>
+        <p>Premium Barbering</p>
+        <input type="password" id="pin-input" class="pin-input" inputmode="numeric" maxlength="4" placeholder="••••">
+        <button class="btn-login" id="login-btn">ΕΙΣΟΔΟΣ</button>
+    </div>
+</div>
+
+<div class="dashboard" id="main-app">
+    <nav class="top-nav">
+        <div class="nav-header">
+            <div class="logo-area">VIP MEN SALOON</div>
+            <div class="header-actions">
+                <button class="btn-icon" id="btn-settings">⚙</button>
+                <button class="btn-logout" id="logout-btn">ΕΞΟΔΟΣ</button>
+            </div>
+        </div>
+        
+        <div class="barber-tabs">
+            <button class="btn-tab active" data-barber="Gest">Gest</button>
+            <button class="btn-tab" data-barber="Stellios">Στέλιος</button>
+            <button class="btn-tab" data-barber="Billy">Billy</button>
+        </div>
+
+        <div class="tools-row">
+            <div class="search-container">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" class="search-input" placeholder="Αναζήτηση Πελάτη...">
+                <div id="searchResults" class="search-results"></div>
+            </div>
+            <button class="btn-free" id="free-slots-btn">ΕΛΕΥΘΕΡΑ</button>
+        </div>
+    </nav>
+
+    <div class="calendar-wrapper">
+        <div class="calendar-header">
+            <h3 class="calendar-title" id="calendar-title">Μήνας Έτος</h3>
+            <div class="date-picker-container">
+                <div class="cal-icon-btn">📅</div>
+                <input type="date" id="native-date-picker" class="native-date-input">
+            </div>
+        </div>
+        <div class="calendar-ribbon" id="calendar-ribbon"></div>
+    </div>
+
+    <div class="stats-dashboard">
+        <div class="stat-box">
+            <span class="stat-label">Συνολο Ραντεβου</span>
+            <span class="stat-value val-total" id="stat-total" onclick="openTodayAppointments()">0</span>
+        </div>
+        <div class="stat-box" id="btn-contacts" style="border-color: var(--success); cursor: pointer; transition: 0.2s;">
+            <span class="stat-label" style="color: var(--success);">ΚΑΤΑΛΟΓΟΣ</span>
+            <span class="stat-value val-done">📞</span>
+            <span id="stat-done" style="display:none;">0</span>
+        </div>
+    </div>
+
+    <div class="schedule-header-row">
+        <h3 class="schedule-title">Κρατησεις</h3>
+        <button class="btn-add-time" id="btn-add-time">+ ΝΕΑ ΩΡΑ</button>
+    </div>
+
+    <div class="schedule-container" id="schedule-container"></div>
+    
+    <div id="connection-status" class="conn-status">● LIVE SYNC (FIREBASE)</div>
+</div>
+
+<div class="modal-overlay" id="add-time-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>ΕΚΤΑΚΤΗ ΩΡΑ</h3>
+            <button class="close-modal" id="close-add-modal">✕</button>
+        </div>
+        
+        <div class="time-select-container">
+            <select id="custom-time-h" class="time-select">
+                <option value="07">07:00 Πρωί</option><option value="08">08:00 Πρωί</option><option value="09">09:00 Πρωί</option><option value="10">10:00 Πρωί</option><option value="11">11:00 Πρωί</option>
+                <option value="12">12:00 Μεσημ.</option><option value="13">13:00 Απόγ.</option><option value="14">14:00 Απόγ.</option><option value="15">15:00 Απόγ.</option><option value="16">16:00 Απόγ.</option><option value="17">17:00 Απόγ.</option><option value="18">18:00 Απόγ.</option><option value="19">19:00 Απόγ.</option><option value="20">20:00 Βράδυ</option><option value="21">21:00 Βράδυ</option><option value="22">22:00 Βράδυ</option><option value="23">23:00 Βράδυ</option>
+            </select>
+            <span style="font-size:24px; font-weight:300; color:var(--text-muted);">:</span>
+            <select id="custom-time-m" class="time-select" style="flex:0.5;">
+                <option value="00">00</option><option value="05">05</option><option value="10">10</option><option value="15">15</option><option value="20">20</option><option value="25">25</option><option value="30">30</option><option value="35">35</option><option value="40">40</option><option value="45">45</option><option value="50">50</option><option value="55">55</option>
+            </select>
+        </div>
+        <button class="btn-full" id="add-custom-time">ΠΡΟΣΘΗΚΗ</button>
+    </div>
+</div>
+
+<div class="modal-overlay" id="free-slots-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>ΔΙΑΘΕΣΙΜΟΤΗΤΑ (14 ΗΜΕΡΕΣ)</h3>
+            <button class="close-modal" id="close-free-modal">✕</button>
+        </div>
+        <div class="free-slots-list" id="free-slots-list"></div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="contacts-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>ΤΗΛΕΦΩΝΙΚΟΣ ΚΑΤΑΛΟΓΟΣ</h3>
+            <button class="close-modal" id="close-contacts-modal">✕</button>
+        </div>
+        
+        <div style="background:var(--bg-dark); padding:15px; border-radius:10px; margin-bottom:20px; border: 1px solid var(--border-light);">
+            <input type="text" id="new-contact-name" class="search-input" placeholder="Όνομα Πελάτη" style="margin-bottom:10px;">
+            <input type="tel" id="new-contact-phone" class="search-input" placeholder="Τηλέφωνο (π.χ. 69...)" style="margin-bottom:10px;">
+            <button class="btn-full" id="save-contact-btn" style="margin-bottom:0;">ΑΠΟΘΗΚΕΥΣΗ</button>
+        </div>
+        
+        <div class="free-slots-list" id="contacts-list-container" style="max-height: 400px; overflow-y: auto;">
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="today-appointments-modal" onclick="closeModalOutside(event, 'today-appointments-modal')">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>ΣΗΜΕΡΙΝΑ ΡΑΝΤΕΒΟΥ</h3>
+            <button class="close-modal" onclick="closeTodayAppointmentsModal()">✕</button>
+        </div>
+        <div class="free-slots-list" id="today-appointments-list" style="max-height: 400px; overflow-y: auto;">
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="settings-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>ΡΥΘΜΙΣΕΙΣ - <span id="modal-barber-name"></span></h3>
+            <button class="close-modal" id="close-settings-modal">✕</button>
+        </div>
+        
+        <p style="color:var(--text-muted); font-size:0.75rem; text-transform:uppercase; margin-bottom:10px;">Σταθερα Κενα:</p>
+        <div class="settings-list" id="settings-list"></div>
+        <button class="btn-full" id="save-settings">ΑΠΟΘΗΚΕΥΣΗ</button>
+        
+        <hr style="border:0; border-top:1px solid var(--border-light); margin: 15px 0;">
+        <button class="btn-danger-outline" id="clear-data">ΚΑΘΑΡΙΣΜΟΣ ΣΥΣΤΗΜΑΤΟΣ (RESET)</button>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // ---------- Firebase Initialization ----------
+        const firebaseConfig = {
+            apiKey: "AIzaSyBuXs5eu3vf1tGSg_JiYzPL2dCv244x5r8",
+            authDomain: "vip-men-saloon-60842.firebaseapp.com",
+            databaseURL: "https://vip-men-saloon-60842-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "vip-men-saloon-60842",
+            storageBucket: "vip-men-saloon-60842.firebasestorage.app",
+            messagingSenderId: "866582451512",
+            appId: "1:866582451512:web:2ca5cda961ae0f11035dcd"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const appDataRef = db.ref('appData');
+
+        // ---------- ΣΤΑΘΕΡΕΣ ----------
+        const CONSTANT_SCHEDULES = {
+            'Gest': { start: "12:30", end: "23:00" },
+            'Stellios': { start: "13:00", end: "21:00" },
+            'Billy': { start: "10:00", end: "23:30" }
+        };
+
+        const SATURDAY_SCHEDULE = { start: "09:00", end: "15:00" };
+        const ROLES = { '1111': 'Gest', '2222': 'Stellios', '9999': 'Billy' };
+        
+        // ---------- STATE ----------
+        let loggedInUser = null; 
+        let currentBarber = 'Gest';
+        let currentDateObj = new Date();
+        if (currentDateObj.getDay() === 0) currentDateObj.setDate(currentDateObj.getDate() + 1);
+        
+        let appData = { 
+            appointments: {}, 
+            permanent: {}, 
+            customTimes: {}, 
+            fixedBreaks: {},
+            contacts: {} 
+        };
+
+        const daysGreek = ['ΚΥΡΙΑΚΗ', 'ΔΕΥΤΕΡΑ', 'ΤΡΙΤΗ', 'ΤΕΤΑΡΤΗ', 'ΠΕΜΠΤΗ', 'ΠΑΡΑΣΚΕΥΗ', 'ΣΑΒΒΑΤΟ'];
+        const shortDays = ['ΚΥΡ', 'ΔΕΥ', 'ΤΡΙ', 'ΤΕΤ', 'ΠΕΜ', 'ΠΑΡ', 'ΣΑΒ'];
+        const monthsGreek = ['Ιανουάριος', 'Φεβρουάριος', 'Μάρτιος', 'Απρίλιος', 'Μάιος', 'Ιούνιος', 'Ιούλιος', 'Αύγουστος', 'Σεπτέμβριος', 'Οκτώβριος', 'Νοέμβριος', 'Δεκέμβριος'];
+        const shortMonths = ['Ιαν', 'Φεβ', 'Μαρ', 'Απρ', 'Μαι', 'Ιουν', 'Ιουλ', 'Αυγ', 'Σεπ', 'Οκτ', 'Νοε', 'Δεκ'];
+
+        // ---------- ΒΟΗΘΗΤΙΚΕΣ ----------
+        function ensureDataStructure() {
+            if (!appData.appointments) appData.appointments = {};
+            if (!appData.permanent) appData.permanent = {};
+            if (!appData.customTimes) appData.customTimes = {};
+            if (!appData.fixedBreaks) appData.fixedBreaks = {};
+            if (!appData.contacts) appData.contacts = {}; 
+            
+            for (let b in CONSTANT_SCHEDULES) {
+                if(!appData.appointments[b]) appData.appointments[b] = {};
+                if(!appData.permanent[b]) appData.permanent[b] = {};
+                if(!appData.customTimes[b]) appData.customTimes[b] = {};
+                if(!appData.fixedBreaks[b]) appData.fixedBreaks[b] = [];
+            }
+        }
+
+        function getAppt(barber, dateStr, time) { 
+            return (appData.appointments[barber] && appData.appointments[barber][dateStr]) ? appData.appointments[barber][dateStr][time] || null : null; 
+        }
+        
+        function setAppt(barber, dateStr, time, valueObj) {
+            if (!appData.appointments[barber]) appData.appointments[barber] = {};
+            if (!appData.appointments[barber][dateStr]) appData.appointments[barber][dateStr] = {};
+            appData.appointments[barber][dateStr][time] = valueObj;
+            
+            // Η ΠΙΟ ΣΗΜΑΝΤΙΚΗ ΑΛΛΑΓΗ (Granular Update) για να μη σβήνονται τα ραντεβού άλλων
+            appDataRef.child('appointments').child(barber).child(dateStr).child(time).set(valueObj);
+            updateStats();
+        }
+        
+        function getPerm(barber, dayOfWeek, time) { 
+            if (!appData.permanent || !appData.permanent[barber]) return null;
+            let safeKey = 'day_' + dayOfWeek;
+            if (appData.permanent[barber][safeKey] && appData.permanent[barber][safeKey][time]) {
+                return appData.permanent[barber][safeKey][time];
+            }
+            if (appData.permanent[barber][dayOfWeek] && appData.permanent[barber][dayOfWeek][time]) {
+                return appData.permanent[barber][dayOfWeek][time];
+            }
+            return null; 
+        }
+        
+        function getCustomTimes(barber, dateStr) { 
+            return (appData.customTimes[barber] && appData.customTimes[barber][dateStr]) ? appData.customTimes[barber][dateStr] : []; 
+        }
+        
+        function getFixedBreaks(barber) { 
+            return appData.fixedBreaks[barber] || []; 
+        }
+
+        function formatDateStr(d) { 
+            return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); 
+        }
+
+        function getScheduleForBarber(barber, dayOfWeek) {
+            if (dayOfWeek === 6) return SATURDAY_SCHEDULE;
+            return CONSTANT_SCHEDULES[barber];
+        }
+
+        // ---------- Firebase Load & Save ----------
+        function loadData() {
+            appDataRef.once('value').then((snapshot) => {
+                const data = snapshot.val();
+                if (data) appData = data;
+                else appData = { appointments: {}, permanent: {}, customTimes: {}, fixedBreaks: {}, contacts: {} };
+                ensureDataStructure();
+                updateDatalist();
+                if(document.getElementById('contacts-modal').style.display === 'flex') {
+                    renderContactsList();
+                }
+                renderSchedule();
+            });
+        }
+
+        appDataRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                appData = data;
+                ensureDataStructure();
+                updateDatalist();
+                if(document.getElementById('contacts-modal').style.display === 'flex') {
+                    renderContactsList();
+                }
+                renderSchedule();
+            }
+        });
+
+        // ---------- ΛΕΙΤΟΥΡΓΙΕΣ ΚΑΤΑΛΟΓΟΥ ----------
+        function updateDatalist() {
+            const datalist = document.getElementById('clients-list');
+            if(!datalist) return;
+            datalist.innerHTML = '';
+            for (let key in appData.contacts) {
+                let opt = document.createElement('option');
+                opt.value = appData.contacts[key].name;
+                datalist.appendChild(opt);
+            }
+        }
+
+        function renderContactsList() {
+            const container = document.getElementById('contacts-list-container');
+            if(!container) return;
+            container.innerHTML = '';
+            
+            const contactsArray = Object.keys(appData.contacts || {}).map(k => ({ id: k, ...appData.contacts[k] }));
+            contactsArray.sort((a, b) => a.name.localeCompare(b.name, 'el'));
+
+            for (let i = 0; i < contactsArray.length; i++) {
+                let c = contactsArray[i];
+                let item = document.createElement('div');
+                item.className = 'free-slot-item';
+                item.style.alignItems = 'center';
+                item.innerHTML = `
+                    <div>
+                        <div style="color: var(--gold-primary); font-weight: 400; font-size: 1.05rem;">${c.name}</div>
+                        <div style="color: var(--text-muted); font-size: 0.85rem;">${c.phone}</div>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <a href="tel:${c.phone}" class="action-btn" style="color: var(--success); border-color: var(--success); text-decoration: none; display:flex; justify-content:center; align-items:center;">📞</a>
+                        <button class="action-btn" data-action="deleteContact" data-id="${c.id}" style="color: var(--danger); display:flex; justify-content:center; align-items:center;">✕</button>
+                    </div>
+                `;
+                container.appendChild(item);
+            }
+        }
+
+        // ---------- ΣΥΝΑΡΤΗΣΕΙΣ UI ----------
+        function updateStats() {
+            let total = 0, completedCount = 0;
+            const dateStr = formatDateStr(currentDateObj);
+            const dayOfWeek = currentDateObj.getDay();
+            
+            if(dayOfWeek === 0) return;
+
+            const schedule = getScheduleForBarber(currentBarber, dayOfWeek);
+            if (!schedule) return;
+            let defaultTimes = generateTimeSlots(schedule.start, schedule.end);
+            let customTimes = getCustomTimes(currentBarber, dateStr);
+            
+            let allTimesMap = {};
+            for(let i=0; i<defaultTimes.length; i++) allTimesMap[defaultTimes[i]] = true;
+            for(let j=0; j<customTimes.length; j++) allTimesMap[customTimes[j]] = true;
+            let allTimes = Object.keys(allTimesMap);
+
+            for(let k=0; k<allTimes.length; k++) {
+                let t = allTimes[k];
+                let appt = getAppt(currentBarber, dateStr, t);
+                let perm = getPerm(currentBarber, dayOfWeek, t);
+                
+                let nameVal = ''; let isComp = false; 
+                
+                if (appt && (appt.name || appt.isCancelled)) {
+                    if (!appt.isCancelled) {
+                        nameVal = appt.name; 
+                        isComp = appt.isCompleted; 
+                    }
+                } else if (perm) { 
+                    nameVal = perm.name; 
+                }
+
+                if (nameVal && nameVal !== 'ΔΙΑΛΕΙΜΜΑ' && nameVal !== 'ΣΤΑΘΕΡΟ ΔΙΑΛΕΙΜΜΑ') {
+                    total++; 
+                    if (isComp) { completedCount++; }
+                }
+            }
+            
+            document.getElementById('stat-total').innerText = total;
+            document.getElementById('stat-done').innerText = completedCount;
+        }
+
+        function generateTimeSlots(startStr, endStr) {
+            if(!startStr || !endStr) return [];
+            let slots = [];
+            let startParts = startStr.split(':'); 
+            let endParts = endStr.split(':');
+            let startH = parseInt(startParts[0]); 
+            let startM = parseInt(startParts[1]);
+            let endH = parseInt(endParts[0]); 
+            let endM = parseInt(endParts[1]);
+            let currentH = startH, currentM = startM;
+            while (currentH < endH || (currentH === endH && currentM <= endM)) {
+                slots.push(String(currentH).padStart(2, '0') + ':' + String(currentM).padStart(2, '0'));
+                currentM += 30;
+                if (currentM >= 60) { 
+                    currentM -= 60; 
+                    currentH += 1; 
+                }
+            }
+            return slots;
+        }
+
+        function renderSchedule() {
+            const container = document.getElementById('schedule-container');
+            const dayOfWeek = currentDateObj.getDay();
+
+            if (dayOfWeek === 0) {
+                container.innerHTML = '<div style="text-align:center; padding:50px 20px; color:var(--danger); font-size:1.1rem; text-transform:uppercase;">Το κουρειο ειναι κλειστο</div>';
+                document.getElementById('btn-add-time').style.display = 'none';
+                document.getElementById('stat-total').innerText = '-'; 
+                document.getElementById('stat-done').innerText = '-';
+                return;
+            }
+
+            container.innerHTML = '';
+            const isReadOnly = (loggedInUser !== 'Billy' && loggedInUser !== currentBarber);
+            document.getElementById('btn-settings').style.display = isReadOnly ? 'none' : 'block';
+            document.getElementById('btn-add-time').style.display = isReadOnly ? 'none' : 'flex';
+            
+            const dateStr = formatDateStr(currentDateObj);
+            
+            const schedule = getScheduleForBarber(currentBarber, dayOfWeek);
+            if (!schedule) return;
+            let defaultTimes = generateTimeSlots(schedule.start, schedule.end);
+            
+            let customTimes = getCustomTimes(currentBarber, dateStr);
+            let barberBreaks = getFixedBreaks(currentBarber);
+            
+            let allTimesMap = {};
+            for(let i=0; i<defaultTimes.length; i++) allTimesMap[defaultTimes[i]] = true;
+            for(let j=0; j<customTimes.length; j++) allTimesMap[customTimes[j]] = true;
+            
+            let allTimes = Object.keys(allTimesMap);
+            allTimes.sort(function(a, b) { return a.localeCompare(b); }); 
+
+            if (allTimes.length === 0) {
+                container.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">Δεν υπάρχουν διαθέσιμες ώρες για αυτή την ημέρα.</div>';
+                return;
+            }
+
+            for(let k=0; k<allTimes.length; k++) {
+                let time = allTimes[k];
+                const isFixedBreak = (barberBreaks.indexOf(time) > -1);
+                const isCustomTime = (customTimes.indexOf(time) > -1);
+                
+                let dayAppt = getAppt(currentBarber, dateStr, time);
+                let permAppt = getPerm(currentBarber, dayOfWeek, time);
+
+                let activeAppt = null;
+                let isPermActive = !!permAppt; 
+
+                if (dayAppt && (dayAppt.name || dayAppt.isCancelled)) {
+                    if (!dayAppt.isCancelled) {
+                        activeAppt = dayAppt;
+                    }
+                } else if (permAppt) {
+                    activeAppt = { name: permAppt.name, comment: permAppt.comment, status: 'APPROVED', isCompleted: false };
+                }
+
+                let cardClass = 'free';
+                if (isReadOnly) cardClass += ' is-readonly'; 
+
+                let nameVal = activeAppt ? activeAppt.name : '';
+                let commentVal = activeAppt ? activeAppt.comment : '';
+                let status = activeAppt ? (activeAppt.status || 'PENDING') : 'NONE'; 
+                let isCompleted = activeAppt ? activeAppt.isCompleted : false;
+                
+                if (!nameVal && isFixedBreak) nameVal = 'ΣΤΑΘΕΡΟ ΔΙΑΛΕΙΜΜΑ';
+
+                if (nameVal === 'ΣΤΑΘΕΡΟ ΔΙΑΛΕΙΜΜΑ' || nameVal === 'ΔΙΑΛΕΙΜΜΑ') {
+                    cardClass += ' break';
+                } else if (nameVal && nameVal !== '') {
+                    if (status === 'PENDING') cardClass += ' pending';
+                    if (status === 'APPROVED') cardClass += ' approved';
+                    if (isCompleted) cardClass += ' completed';
+                    if (isPermActive) cardClass += ' permanent';
+                }
+
+                const card = document.createElement('div');
+                card.className = 'slot-card ' + cardClass;
+                card.id = 'card-' + time;
+                card.dataset.hour = time;
+                card.dataset.date = dateStr;
+                
+                const showDetails = (nameVal && nameVal !== 'ΔΙΑΛΕΙΜΜΑ' && nameVal !== 'ΣΤΑΘΕΡΟ ΔΙΑΛΕΙΜΜΑ');
+
+                let namePrefix = '';
+                if (status === 'PENDING' && !isCompleted) namePrefix = '⌛ ';
+
+                let phoneMatch = null;
+                if (nameVal && appData.contacts) {
+                    let searchName = nameVal.replace(/^[⌛]\s*/, '').trim().toLowerCase();
+                    for (let c_key in appData.contacts) {
+                        if (appData.contacts[c_key].name.toLowerCase() === searchName) {
+                            phoneMatch = appData.contacts[c_key].phone;
+                            break;
+                        }
+                    }
+                }
+                
+                let callBtnHtml = phoneMatch ? '<a href="tel:'+phoneMatch+'" class="action-btn" style="color: var(--success); border-color: var(--success); text-decoration: none;" title="Κλήση">📞</a>' : '';
+
+                let actionBtnHtml = isCustomTime 
+                    ? '<button class="action-btn btn-danger" data-action="deleteCustomTime" data-time="'+time+'" title="Διαγραφή">✕</button>'
+                    : '<button class="action-btn" data-action="clear" data-time="'+time+'" title="Καθαρισμός">✕</button>';
+
+                card.innerHTML = 
+                    '<div class="time-badge">' + time + '</div>' +
+                    '<div class="status-indicator"></div>' +
+                    '<div class="slot-content">' +
+                        '<input type="text" class="slot-input name-input" id="input-name-' + time + '" list="clients-list" ' +
+                               'value="' + (nameVal === 'ΣΤΑΘΕΡΟ ΔΙΑΛΕΙΜΜΑ' ? 'Διάλειμμα' : namePrefix + nameVal) + '" ' +
+                               'placeholder="' + (isReadOnly ? '' : 'Όνομα πελάτη...') + '" ' +
+                               'data-field="name" data-time="' + time + '" ' +
+                               (isReadOnly ? 'readonly' : '') + '>' +
+                               
+                    (showDetails ? 
+                        '<div class="details-row">' +
+                            '<input type="text" class="slot-input comment-input" id="input-comment-' + time + '" ' +
+                                   'value="' + commentVal + '" ' +
+                                   'placeholder="' + (isReadOnly ? '' : 'Σχόλιο...') + '" ' +
+                                   'data-field="comment" data-time="' + time + '" ' +
+                                   (isReadOnly ? 'readonly' : '') + '>' +
+                        '</div>'
+                    : '') +
+                    '</div>' +
+                    '<div class="actions-grid">' +
+                        callBtnHtml +
+                        '<button class="action-btn btn-approve ' + (status === 'APPROVED' ? 'is-active' : '') + '" data-action="setStatus" data-status="APPROVED" data-time="' + time + '" title="Έγκριση">✓</button>' +
+                        '<button class="action-btn btn-complete ' + (isCompleted ? 'is-active' : '') + '" data-action="toggleComplete" data-time="' + time + '" title="Ολοκληρώθηκε">✔</button>' +
+                        '<button class="action-btn btn-perm ' + (isPermActive ? 'is-active' : '') + '" data-action="togglePermanent" data-time="' + time + '" title="Μόνιμο">⟳</button>' +
+                        '<button class="action-btn" data-action="break" data-time="' + time + '" title="Διάλειμμα">॥</button>' +
+                        actionBtnHtml +
+                    '</div>';
+                container.appendChild(card);
+            }
+            updateStats();
+        }
+
+        function updateCalendarUI() {
+            const ribbon = document.getElementById('calendar-ribbon');
+            ribbon.innerHTML = '';
+            document.getElementById('calendar-title').innerText = monthsGreek[currentDateObj.getMonth()] + ' ' + currentDateObj.getFullYear();
+            document.getElementById('native-date-picker').value = formatDateStr(currentDateObj);
+
+            let startDate = new Date(currentDateObj.getFullYear(), currentDateObj.getMonth(), currentDateObj.getDate());
+            startDate.setDate(startDate.getDate() - 15); 
+            const currentStr = formatDateStr(currentDateObj);
+            const todayStr = formatDateStr(new Date());
+
+            for(let i=0; i<=45; i++) {
+                let d = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+                d.setDate(startDate.getDate() + i);
+                let checkStr = formatDateStr(d);
+                
+                let isToday = (checkStr === todayStr);
+                let isSelected = (checkStr === currentStr);
+                let isSunday = (d.getDay() === 0); 
+                
+                let btn = document.createElement('div');
+                btn.className = 'ribbon-day' + (isSelected ? ' active' : '') + (isToday && !isSelected ? ' today' : '') + (isSunday ? ' sunday' : '');
+                btn.dataset.date = d.toISOString();
+                if(isSelected) btn.id = 'active-ribbon-day';
+                
+                if (!isSunday) {
+                    btn.onclick = function() { 
+                        const newDate = new Date(this.dataset.date);
+                        currentDateObj = newDate; 
+                        updateCalendarUI(); 
+                        renderSchedule(); 
+                    };
+                }
+                
+                btn.innerHTML = '<span class="ribbon-dow">' + shortDays[d.getDay()] + '</span><span class="ribbon-date">' + d.getDate() + '</span><span class="ribbon-month">' + shortMonths[d.getMonth()] + '</span>';
+                ribbon.appendChild(btn);
+            }
+
+            setTimeout(function() {
+                const activeEl = document.getElementById('active-ribbon-day');
+                if(activeEl) activeEl.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+            }, 50);
+        }
+
+        function jumpToDate(dateString) {
+            if (!dateString) return;
+            let parts = dateString.split('-');
+            let targetDate = new Date(parts[0], parts[1]-1, parts[2]);
+            if (targetDate.getDay() === 0) { 
+                alert("Το κουρείο είναι κλειστό τις Κυριακές."); 
+                return; 
+            }
+            currentDateObj = targetDate;
+            updateCalendarUI(); 
+            renderSchedule();
+        }
+
+        function changeBarber(barberName) {
+            currentBarber = barberName;
+            document.querySelectorAll('.btn-tab').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.btn-tab[data-barber="${barberName}"]`).classList.add('active');
+            renderSchedule();
+        }
+
+        // ---------- ΔΙΑΧΕΙΡΙΣΗ ΩΡΩΝ ----------
+        function openAddTimeModal() {
+            document.getElementById('add-time-modal').style.display = 'flex';
+            let d = new Date();
+            let h = String(d.getHours()).padStart(2, '0');
+            let m = String(Math.round(d.getMinutes() / 5) * 5).padStart(2, '0');
+            if (m === '60') { 
+                m = '00'; 
+                h = String((parseInt(h)+1)%24).padStart(2, '0'); 
+            }
+            let hSelect = document.getElementById('custom-time-h');
+            let mSelect = document.getElementById('custom-time-m');
+            
+            let foundH = false, foundM = false;
+            for(let i=0; i<hSelect.options.length; i++) { 
+                if(hSelect.options[i].value === h) foundH = true; 
+            }
+            for(let j=0; j<mSelect.options.length; j++) { 
+                if(mSelect.options[j].value === m) foundM = true; 
+            }
+            
+            if(foundH) hSelect.value = h; else hSelect.value = "12";
+            if(foundM) mSelect.value = m;
+        }
+        
+        function closeAddTimeModal() { 
+            document.getElementById('add-time-modal').style.display = 'none'; 
+        }
+
+        function addCustomTime() {
+            const h = document.getElementById('custom-time-h').value; 
+            const m = document.getElementById('custom-time-m').value;
+            const timeVal = h + ':' + m; 
+            const dateStr = formatDateStr(currentDateObj);
+            
+            if (!appData.customTimes[currentBarber]) appData.customTimes[currentBarber] = {};
+            if (!appData.customTimes[currentBarber][dateStr]) appData.customTimes[currentBarber][dateStr] = [];
+            
+            if (appData.customTimes[currentBarber][dateStr].indexOf(timeVal) === -1) {
+                appData.customTimes[currentBarber][dateStr].push(timeVal);
+                appDataRef.child('customTimes').child(currentBarber).child(dateStr).set(appData.customTimes[currentBarber][dateStr]);
+                updateStats();
+                closeAddTimeModal();
+                renderSchedule();
+                setTimeout(function() {
+                    const newCard = document.getElementById('card-' + timeVal);
+                    if (newCard) { 
+                        newCard.scrollIntoView({ behavior: 'smooth', block: 'center' }); 
+                        newCard.classList.add('highlight-focus'); 
+                    }
+                }, 300);
+            } else { 
+                alert("Αυτή η ώρα υπάρχει ήδη."); 
+            }
+        }
+
+        function deleteCustomTime(time) {
+            if(confirm("Διαγραφή ώρας " + time + ";")) {
+                const dateStr = formatDateStr(currentDateObj);
+                let cTimes = getCustomTimes(currentBarber, dateStr);
+                let index = cTimes.indexOf(time);
+                if (index > -1) {
+                    appData.customTimes[currentBarber][dateStr].splice(index, 1);
+                    appDataRef.child('customTimes').child(currentBarber).child(dateStr).set(appData.customTimes[currentBarber][dateStr]);
+                    
+                    if (appData.appointments[currentBarber] && appData.appointments[currentBarber][dateStr]) {
+                        delete appData.appointments[currentBarber][dateStr][time];
+                        appDataRef.child('appointments').child(currentBarber).child(dateStr).child(time).remove();
+                    }
+                    updateStats();
+                    renderSchedule();
+                }
+            }
+        }
+
+        // ---------- ACTIONS ----------
+        function forceSaveInput(time) {
+            let nameEl = document.getElementById('input-name-' + time);
+            if (nameEl) {
+                let nVal = nameEl.value.replace(/^[⌛]\s*/, '').trim();
+                const dateStr = formatDateStr(currentDateObj);
+                if (nVal !== '' && nVal !== 'ΔΙΑΛΕΙΜΜΑ' && nVal !== 'ΣΤΑΘΕΡΟ ΔΙΑΛΕΙΜΜΑ') {
+                    let existing = getAppt(currentBarber, dateStr, time) || {};
+                    setAppt(currentBarber, dateStr, time, { 
+                        name: nVal, 
+                        comment: existing.comment || '', 
+                        status: existing.status || 'PENDING',
+                        isCompleted: existing.isCompleted || false
+                    });
+                }
+            }
+        }
+
+        function updateName(inputElement, time) {
+            if (loggedInUser !== 'Billy' && loggedInUser !== currentBarber) return;
+            let val = inputElement.value.trim();
+            if (val.indexOf('⌛') === 0) { val = val.substring(2).trim(); }
+
+            const dateStr = formatDateStr(currentDateObj);
+            const dayOfWeek = currentDateObj.getDay();
+            
+            if (val === '') {
+                let perm = getPerm(currentBarber, dayOfWeek, time);
+                if (perm) {
+                    setAppt(currentBarber, dateStr, time, { isCancelled: true });
+                } else {
+                    if (appData.appointments[currentBarber] && appData.appointments[currentBarber][dateStr]) {
+                        delete appData.appointments[currentBarber][dateStr][time];
+                        appDataRef.child('appointments').child(currentBarber).child(dateStr).child(time).remove();
+                        updateStats();
+                    }
+                }
+            } else {
+                let existing = getAppt(currentBarber, dateStr, time) || {};
+                setAppt(currentBarber, dateStr, time, { 
+                    name: val, 
+                    comment: existing.comment || '', 
+                    status: existing.status || 'PENDING',
+                    isCompleted: existing.isCompleted || false
+                });
+            }
+        }
+
+        function updateDetails(inputElement, field, time) {
+            if (loggedInUser !== 'Billy' && loggedInUser !== currentBarber) return;
+            let val = inputElement.value.trim();
+            const dateStr = formatDateStr(currentDateObj);
+            const dayOfWeek = currentDateObj.getDay();
+            
+            let appt = getAppt(currentBarber, dateStr, time);
+            let perm = getPerm(currentBarber, dayOfWeek, time);
+            
+            if (!appt && perm) {
+                appt = { name: perm.name, comment: perm.comment, status: 'APPROVED', isCompleted: false };
+            } 
+            
+            if (appt) { 
+                appt[field] = val; 
+                setAppt(currentBarber, dateStr, time, appt);
+            }
+        }
+
+        function setAction(time, actionType) {
+            if (loggedInUser !== 'Billy' && loggedInUser !== currentBarber) return;
+            const dateStr = formatDateStr(currentDateObj);
+            const dayOfWeek = currentDateObj.getDay();
+            
+            if (actionType === 'CLEAR') {
+                let perm = getPerm(currentBarber, dayOfWeek, time);
+                if (perm) {
+                    setAppt(currentBarber, dateStr, time, { isCancelled: true });
+                } else {
+                    if (appData.appointments[currentBarber] && appData.appointments[currentBarber][dateStr]) {
+                        delete appData.appointments[currentBarber][dateStr][time];
+                        appDataRef.child('appointments').child(currentBarber).child(dateStr).child(time).remove();
+                        updateStats();
+                        renderSchedule();
+                    }
+                }
+            } else if (actionType === 'BREAK') {
+                setAppt(currentBarber, dateStr, time, { name: 'ΔΙΑΛΕΙΜΜΑ', comment: '' });
+            }
+        }
+
+        function setStatus(time, newStatus) {
+            if (loggedInUser !== 'Billy' && loggedInUser !== currentBarber) return;
+            forceSaveInput(time);
+            
+            const dateStr = formatDateStr(currentDateObj);
+            const dayOfWeek = currentDateObj.getDay();
+            
+            let appt = getAppt(currentBarber, dateStr, time);
+            let perm = getPerm(currentBarber, dayOfWeek, time);
+
+            if (!appt && perm) { appt = { name: perm.name, comment: perm.comment, status: 'APPROVED', isCompleted: false }; }
+            
+            if (appt && appt.name && appt.name !== 'ΔΙΑΛΕΙΜΜΑ' && appt.name !== 'ΣΤΑΘΕΡΟ ΔΙΑΛΕΙΜΜΑ') {
+                appt.status = (appt.status === newStatus) ? 'PENDING' : newStatus;
+                setAppt(currentBarber, dateStr, time, appt);
+            }
+        }
+
+        function toggleComplete(time) {
+            if (loggedInUser !== 'Billy' && loggedInUser !== currentBarber) return;
+            forceSaveInput(time); 
+
+            const dateStr = formatDateStr(currentDateObj);
+            const dayOfWeek = currentDateObj.getDay();
+            
+            let appt = getAppt(currentBarber, dateStr, time);
+            let perm = getPerm(currentBarber, dayOfWeek, time);
+
+            if (!appt && perm) { appt = { name: perm.name, comment: perm.comment, status: 'APPROVED', isCompleted: false }; }
+            
+            if (appt && appt.name && appt.name !== 'ΔΙΑΛΕΙΜΜΑ' && appt.name !== 'ΣΤΑΘΕΡΟ ΔΙΑΛΕΙΜΜΑ') {
+                appt.isCompleted = !appt.isCompleted;
+                setAppt(currentBarber, dateStr, time, appt);
+            }
+        }
+
+        function togglePermanent(time) {
+            if (loggedInUser !== 'Billy' && loggedInUser !== currentBarber) return;
+            
+            const btn = document.querySelector(`.btn-perm[data-time="${time}"]`);
+            if (btn) {
+                btn.style.transition = 'background 0.1s, border-color 0.1s';
+                btn.style.background = 'rgba(74, 108, 140, 0.3)';
+                btn.style.borderColor = 'var(--info)';
+                setTimeout(() => {
+                    btn.style.background = '';
+                    btn.style.borderColor = '';
+                }, 200);
+            }
+            
+            forceSaveInput(time); 
+
+            const dayOfWeek = currentDateObj.getDay();
+            const dateStr = formatDateStr(currentDateObj);
+            const safeKey = 'day_' + dayOfWeek;
+            
+            if (!appData.permanent) appData.permanent = {};
+            if (!appData.permanent[currentBarber]) appData.permanent[currentBarber] = {};
+            if (!appData.permanent[currentBarber][safeKey]) appData.permanent[currentBarber][safeKey] = {};
+
+            let isPermActive = !!getPerm(currentBarber, dayOfWeek, time);
+            
+            if (isPermActive) {
+                if (appData.permanent[currentBarber][safeKey] && appData.permanent[currentBarber][safeKey][time]) {
+                    delete appData.permanent[currentBarber][safeKey][time];
+                    appDataRef.child('permanent').child(currentBarber).child(safeKey).child(time).remove();
+                }
+                if (appData.permanent[currentBarber][dayOfWeek] && appData.permanent[currentBarber][dayOfWeek][time]) {
+                    delete appData.permanent[currentBarber][dayOfWeek][time];
+                    appDataRef.child('permanent').child(currentBarber).child(dayOfWeek).child(time).remove();
+                }
+                if (appData.appointments[currentBarber] && appData.appointments[currentBarber][dateStr]) {
+                    let dayAppt = appData.appointments[currentBarber][dateStr][time];
+                    if (dayAppt && dayAppt.isCancelled) {
+                        delete appData.appointments[currentBarber][dateStr][time];
+                        appDataRef.child('appointments').child(currentBarber).child(dateStr).child(time).remove();
+                    }
+                }
+            } else {
+                let inputEl = document.getElementById('input-name-' + time);
+                if(inputEl) {
+                    let nameField = inputEl.value.replace(/^[⌛]\s*/, '').trim();
+                    if (nameField && nameField !== 'ΔΙΑΛΕΙΜΜΑ' && nameField !== 'ΣΤΑΘΕΡΟ ΔΙΑΛΕΙΜΜΑ') {
+                        let permObj = { name: nameField, comment: '' };
+                        let commentEl = document.getElementById('input-comment-' + time);
+                        if (commentEl) permObj.comment = commentEl.value.trim();
+                        
+                        appData.permanent[currentBarber][safeKey][time] = permObj;
+                        appDataRef.child('permanent').child(currentBarber).child(safeKey).child(time).set(permObj);
+                    } else {
+                        alert("Πληκτρολογήστε πρώτα το όνομα του πελάτη για να το κάνετε μόνιμο ραντεβού.");
+                        return; 
+                    }
+                }
+            }
+            
+            updateStats(); 
+            renderSchedule();
+        }
+
+        // ---------- ΕΜΦΑΝΙΣΗ ΣΗΜΕΡΙΝΩΝ ΡΑΝΤΕΒΟΥ ----------
+        function openTodayAppointments() {
+            const modal = document.getElementById('today-appointments-modal');
+            const listContainer = document.getElementById('today-appointments-list');
+            
+            const dateStr = formatDateStr(currentDateObj);
+            const dayOfWeek = currentDateObj.getDay();
+            const appointmentsToday = [];
+            
+            const schedule = getScheduleForBarber(currentBarber, dayOfWeek);
+            if (!schedule) return;
+            let defaultTimes = generateTimeSlots(schedule.start, schedule.end);
+            let customTimes = getCustomTimes(currentBarber, dateStr);
+            let barberBreaks = getFixedBreaks(currentBarber);
+            
+            let allTimesMap = {};
+            for(let i=0; i<defaultTimes.length; i++) allTimesMap[defaultTimes[i]] = true;
+            for(let j=0; j<customTimes.length; j++) allTimesMap[customTimes[j]] = true;
+            
+            let allTimes = Object.keys(allTimesMap);
+            allTimes.sort((a,b) => a.localeCompare(b));
+
+            allTimes.forEach(time => {
+                const dayAppt = getAppt(currentBarber, dateStr, time);
+                const permAppt = getPerm(currentBarber, dayOfWeek, time);
+                let displayName = '';
+                let displayComment = '';
+                let type = '';
+                
+                if (dayAppt && (dayAppt.name || dayAppt.isCancelled)) {
+                    if (!dayAppt.isCancelled) {
+                        displayName = dayAppt.name || '';
+                        displayComment = dayAppt.comment || '';
+                        type = dayAppt.status === 'PENDING' ? 'pending' : (dayAppt.status === 'APPROVED' ? 'approved' : '');
+                        if (dayAppt.isCompleted) type = 'completed';
+                    }
+                } else if (permAppt) {
+                    displayName = permAppt.name || '';
+                    displayComment = permAppt.comment || '';
+                    type = 'permanent';
+                }
+                
+                if (displayName) {
+                    appointmentsToday.push({
+                        time: time,
+                        name: displayName,
+                        comment: displayComment,
+                        type: type
+                    });
+                } else if (barberBreaks.includes(time)) {
+                    appointmentsToday.push({
+                        time: time,
+                        name: 'ΣΤΑΘΕΡΟ ΔΙΑΛΕΙΜΜΑ',
+                        comment: '',
+                        type: 'break'
+                    });
+                }
+            });
+
+            if (appointmentsToday.length === 0) {
+                listContainer.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">Δεν υπάρχουν ραντεβού σήμερα.</div>';
+            } else {
+                let html = '';
+                appointmentsToday.forEach(item => {
+                    let color = '';
+                    if (item.type === 'pending') color = 'var(--warning)';
+                    else if (item.type === 'approved') color = 'var(--gold-primary)';
+                    else if (item.type === 'completed') color = 'var(--success)';
+                    else if (item.type === 'permanent') color = 'var(--info)';
+                    else if (item.type === 'break') color = 'var(--danger)';
+                    
+                    html += `
+                        <div style="padding: 12px; border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <span style="font-weight: bold; color: var(--gold-primary);">${item.time}</span>
+                                <span style="margin-left: 10px; color: ${color};">${item.name}</span>
+                                ${item.comment ? `<br><small style="color: var(--text-muted);">${item.comment}</small>` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+                listContainer.innerHTML = html;
+            }
+            
+            modal.style.display = 'flex';
+        }
+
+        function closeTodayAppointmentsModal() {
+            document.getElementById('today-appointments-modal').style.display = 'none';
+        }
+
+        // ---------- ΑΝΑΖΗΤΗΣΗ ----------
+        function getVirtualSchedule(daysAhead) {
+            if(!daysAhead) daysAhead = 30;
+            let schedule = []; 
+            let tempDate = new Date();
+            for(let i=0; i<daysAhead; i++) {
+                let dStr = formatDateStr(tempDate); 
+                let dow = tempDate.getDay();
+                
+                if (dow !== 0) {
+                    for(let b in CONSTANT_SCHEDULES) {
+                        const sched = (dow === 6) ? SATURDAY_SCHEDULE : CONSTANT_SCHEDULES[b];
+                        let defaultT = generateTimeSlots(sched.start, sched.end);
+                        let customT = getCustomTimes(b, dStr);
+                        let breaks = getFixedBreaks(b);
+                        
+                        let allTimesMap = {};
+                        for(let j=0; j<defaultT.length; j++) allTimesMap[defaultT[j]] = true;
+                        for(let k=0; k<customT.length; k++) allTimesMap[customT[k]] = true;
+                        let times = Object.keys(allTimesMap);
+
+                        for(let m=0; m<times.length; m++) {
+                            let t = times[m];
+                            let isFixed = (breaks.indexOf(t) > -1);
+                            let appt = getAppt(b, dStr, t);
+                            let perm = getPerm(b, dow, t);
+                            let finalName = ''; let finalComment = '';
+
+                            if (appt && (appt.name || appt.isCancelled)) {
+                                if (!appt.isCancelled && appt.name && appt.name !== 'ΔΙΑΛΕΙΜΜΑ') {
+                                    finalName = appt.name;
+                                    finalComment = appt.comment;
+                                }
+                            } else if (perm) { 
+                                finalName = perm.name; 
+                                finalComment = perm.comment; 
+                            }
+
+                            if(!isFixed && !finalName) { 
+                                schedule.push({ status: 'FREE', barber: b, dateStr: dStr, time: t, dateObj: new Date(tempDate.getTime()) }); 
+                            }
+                            else if (finalName) { 
+                                schedule.push({ status: 'BOOKED', barber: b, dateStr: dStr, time: t, name: finalName, comment: finalComment, dateObj: new Date(tempDate.getTime()) }); 
+                            }
+                        }
+                    }
+                }
+                tempDate.setDate(tempDate.getDate() + 1);
+            }
+            return schedule;
+        }
+
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const resultsDiv = document.getElementById('searchResults');
+            if (query.length < 2) { 
+                resultsDiv.style.display = 'none'; 
+                return; 
+            }
+
+            const schedule = getVirtualSchedule(30); 
+            const results = [];
+            for(let i=0; i<schedule.length; i++) {
+                let s = schedule[i];
+                if (s.status === 'BOOKED' && (s.name.toLowerCase().includes(query) || (s.comment && s.comment.toLowerCase().includes(query)))) {
+                    results.push(s);
+                }
+            }
+
+            resultsDiv.innerHTML = '';
+            if (results.length > 0) {
+                for(let j=0; j<results.length; j++) {
+                    let res = results[j];
+                    const item = document.createElement('div'); 
+                    item.className = 'search-result-item'; 
+                    item.onclick = function() { 
+                        closeSearchDropdown();
+                        if (currentBarber !== res.barber) changeBarber(res.barber);
+                        jumpToDate(res.dateStr);
+                        setTimeout(function() {
+                            const card = document.getElementById('card-' + res.time);
+                            if (card) {
+                                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                card.classList.add('highlight-focus');
+                                setTimeout(function() { card.classList.remove('highlight-focus') }, 2000);
+                            }
+                        }, 300);
+                    };
+                    item.innerHTML = '<div class="res-name">' + res.name + '</div><div class="res-details">' + res.barber + ' | ' + res.dateObj.getDate() + '/' + (res.dateObj.getMonth()+1) + ' - ' + res.time + '</div>';
+                    resultsDiv.appendChild(item);
+                }
+            } else { 
+                resultsDiv.innerHTML = '<div style="padding: 15px; color: var(--text-muted); text-align: center;">Δεν βρέθηκε πελάτης</div>'; 
+            }
+            resultsDiv.style.display = 'block';
+        }
+
+        function closeSearchDropdown() { 
+            document.getElementById('searchResults').style.display = 'none'; 
+        }
+
+        // ---------- ΕΛΕΥΘΕΡΑ SLOTS ----------
+        function openFreeSlots() {
+            document.getElementById('free-slots-modal').style.display = 'flex';
+            const list = document.getElementById('free-slots-list'); 
+            list.innerHTML = '';
+            const schedule = getVirtualSchedule(14);
+            const freeSlots = [];
+            for(let i=0; i<schedule.length; i++) {
+                if(schedule[i].status === 'FREE' && schedule[i].barber === currentBarber) freeSlots.push(schedule[i]);
+            }
+
+            if (freeSlots.length === 0) { 
+                list.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">Δεν υπάρχουν ελεύθερα ραντεβού.</div>'; 
+                return; 
+            }
+
+            for(let j=0; j<freeSlots.length; j++) {
+                let s = freeSlots[j];
+                const item = document.createElement('div'); 
+                item.className = 'free-slot-item'; 
+                item.onclick = function() { 
+                    closeFreeSlots();
+                    jumpToDate(s.dateStr);
+                    setTimeout(function() {
+                        const card = document.getElementById('card-' + s.time);
+                        if (card) {
+                            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            card.classList.add('highlight-focus');
+                            setTimeout(function() { card.classList.remove('highlight-focus') }, 2000);
+                            if (loggedInUser === s.barber || loggedInUser === 'Billy') {
+                                let inputEl = document.getElementById('input-name-' + s.time);
+                                if(inputEl) inputEl.focus();
+                            }
+                        }
+                    }, 300);
+                };
+                item.innerHTML = '<div class="free-slot-day">' + shortDays[s.dateObj.getDay()] + ' ' + s.dateObj.getDate() + '/' + (s.dateObj.getMonth()+1) + '</div><div class="free-slot-time">' + s.time + '</div>';
+                list.appendChild(item);
+            }
+        }
+        function closeFreeSlots() { 
+            document.getElementById('free-slots-modal').style.display = 'none'; 
+        }
+
+        // ---------- ΡΥΘΜΙΣΕΙΣ ----------
+        function openSettings() {
+            document.getElementById('settings-modal').style.display = 'flex'; 
+            document.getElementById('modal-barber-name').innerText = currentBarber;
+            const list = document.getElementById('settings-list'); 
+            list.innerHTML = '';
+            const schedule = getScheduleForBarber(currentBarber, currentDateObj.getDay());
+            if (!schedule) return;
+            const times = generateTimeSlots(schedule.start, schedule.end);
+            let breaks = getFixedBreaks(currentBarber);
+            
+            for(let i=0; i<times.length; i++) {
+                let time = times[i];
+                const isChecked = (breaks.indexOf(time) > -1) ? 'checked' : '';
+                const item = document.createElement('div'); 
+                item.className = 'checkbox-wrapper';
+                item.innerHTML = '<input type="checkbox" class="break-checkbox" value="' + time + '" ' + isChecked + '><label style="flex:1; font-weight:300; font-size:0.9rem;">' + time + '</label>';
+                list.appendChild(item);
+            }
+        }
+
+        function closeSettings() { 
+            document.getElementById('settings-modal').style.display = 'none'; 
+        }
+        
+        function closeModalOutside(event, modalId) { 
+            if(event.target.id === modalId) 
+                document.getElementById(modalId).style.display = 'none'; 
+        }
+
+        function saveSettings() {
+            const checkboxes = document.querySelectorAll('#settings-list .break-checkbox');
+            let newBreaks = [];
+            checkboxes.forEach(cb => {
+                if(cb.checked) newBreaks.push(cb.value);
+            });
+            if(!appData.fixedBreaks) appData.fixedBreaks = {};
+            appData.fixedBreaks[currentBarber] = newBreaks;
+            appDataRef.child('fixedBreaks').child(currentBarber).set(newBreaks);
+            updateStats();
+            closeSettings(); 
+            renderSchedule();
+        }
+
+        function clearAllData() {
+            if(confirm("ΠΡΟΣΟΧΗ: Θα διαγραφούν ΟΛΑ τα δεδομένα. Είστε σίγουροι;")) { 
+                appDataRef.remove()
+                    .then(() => {
+                        localStorage.removeItem('vipmen_user');
+                        location.reload();
+                    })
+                    .catch((error) => {
+                        console.error("Σφάλμα διαγραφής:", error);
+                        alert("Σφάλμα διαγραφής δεδομένων.");
+                    });
+            }
+        }
+
+        // ---------- LOGIN / LOGOUT ----------
+        function checkLogin() {
+            const savedUser = localStorage.getItem('vipmen_user');
+            if (savedUser && (savedUser === 'Gest' || savedUser === 'Stellios' || savedUser === 'Billy')) {
+                loggedInUser = savedUser;
+                currentBarber = savedUser === 'Billy' ? 'Gest' : savedUser; 
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('main-app').style.display = 'flex';
+                loadData();
+                updateCalendarUI();
+            } else {
+                showLogin();
+            }
+        }
+
+        function showLogin() {
+            document.getElementById('login-screen').style.display = 'flex';
+            document.getElementById('main-app').style.display = 'none';
+        }
+
+        function handleLogin() {
+            const pin = document.getElementById('pin-input').value;
+            if (ROLES[pin]) {
+                loggedInUser = ROLES[pin]; 
+                localStorage.setItem('vipmen_user', loggedInUser);
+                document.getElementById('pin-input').value = ''; 
+                checkLogin();
+            } else { 
+                alert('Λάθος PIN.'); 
+                document.getElementById('pin-input').value = ''; 
+            }
+        }
+
+        function logout() {
+            if(confirm("Θέλετε να αποσυνδεθείτε;")) {
+                localStorage.removeItem('vipmen_user');
+                loggedInUser = null; 
+                showLogin();
+            }
+        }
+
+        // ---------- EVENT LISTENERS ----------
+        function initEventListeners() {
+            document.getElementById('login-btn').addEventListener('click', handleLogin);
+            document.getElementById('pin-input').addEventListener('keypress', (e) => {
+                if(e.key === 'Enter') handleLogin();
+            });
+            document.getElementById('logout-btn').addEventListener('click', logout);
+            document.getElementById('btn-settings').addEventListener('click', openSettings);
+            document.getElementById('save-settings').addEventListener('click', saveSettings);
+            document.getElementById('close-settings-modal').addEventListener('click', closeSettings);
+            document.getElementById('btn-add-time').addEventListener('click', openAddTimeModal);
+            document.getElementById('close-add-modal').addEventListener('click', closeAddTimeModal);
+            document.getElementById('add-custom-time').addEventListener('click', addCustomTime);
+            document.getElementById('free-slots-btn').addEventListener('click', openFreeSlots);
+            document.getElementById('close-free-modal').addEventListener('click', closeFreeSlots);
+            document.getElementById('clear-data').addEventListener('click', clearAllData);
+            
+            document.getElementById('btn-contacts').addEventListener('click', () => {
+                document.getElementById('contacts-modal').style.display = 'flex';
+                renderContactsList();
+            });
+            document.getElementById('close-contacts-modal').addEventListener('click', () => {
+                document.getElementById('contacts-modal').style.display = 'none';
+            });
+            document.getElementById('save-contact-btn').addEventListener('click', () => {
+                let n = document.getElementById('new-contact-name').value.trim();
+                let p = document.getElementById('new-contact-phone').value.trim();
+                if(!n || !p) { alert('Συμπληρώστε όνομα και τηλέφωνο.'); return; }
+                let id = 'c_' + new Date().getTime();
+                if(!appData.contacts) appData.contacts = {};
+                appData.contacts[id] = { name: n, phone: p };
+                appDataRef.child('contacts').child(id).set({ name: n, phone: p });
+                document.getElementById('new-contact-name').value = '';
+                document.getElementById('new-contact-phone').value = '';
+                renderContactsList();
+            });
+            document.getElementById('contacts-list-container').addEventListener('click', (e) => {
+                let btn = e.target.closest('.action-btn');
+                if(!btn) return;
+                if(btn.dataset.action === 'deleteContact') {
+                    if(confirm('Διαγραφή επαφής;')) {
+                        delete appData.contacts[btn.dataset.id];
+                        appDataRef.child('contacts').child(btn.dataset.id).remove();
+                        renderContactsList();
+                    }
+                }
+            });
+
+            document.querySelectorAll('.btn-tab').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    changeBarber(e.currentTarget.dataset.barber);
+                });
+            });
+            document.getElementById('native-date-picker').addEventListener('change', (e) => {
+                jumpToDate(e.target.value);
+            });
+            document.getElementById('searchInput').addEventListener('input', handleSearch);
+            document.getElementById('searchInput').addEventListener('blur', () => {
+                setTimeout(closeSearchDropdown, 200);
+            });
+            document.getElementById('schedule-container').addEventListener('click', (e) => {
+                const target = e.target;
+                const actionBtn = target.closest('.action-btn');
+                if (!actionBtn) return;
+                const action = actionBtn.dataset.action;
+                const time = actionBtn.dataset.time;
+                if (!time) return;
+                e.preventDefault();
+                e.stopPropagation();
+                if (action === 'setStatus') {
+                    setStatus(time, 'APPROVED');
+                } else if (action === 'toggleComplete') {
+                    toggleComplete(time);
+                } else if (action === 'togglePermanent') {
+                    togglePermanent(time);
+                } else if (action === 'break') {
+                    setAction(time, 'BREAK');
+                } else if (action === 'clear') {
+                    setAction(time, 'CLEAR');
+                } else if (action === 'deleteCustomTime') {
+                    deleteCustomTime(time);
+                }
+            });
+            document.getElementById('schedule-container').addEventListener('change', (e) => {
+                const target = e.target;
+                if (target.classList.contains('name-input')) {
+                    const time = target.dataset.time;
+                    if (time) updateName(target, time);
+                } else if (target.classList.contains('comment-input')) {
+                    const time = target.dataset.time;
+                    if (time) updateDetails(target, 'comment', time);
+                }
+            });
+            document.querySelectorAll('.modal-overlay').forEach(modal => {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) modal.style.display = 'none';
+                });
+            });
+        }
+
+        window.openTodayAppointments = openTodayAppointments;
+        window.closeTodayAppointmentsModal = closeTodayAppointmentsModal;
+
+        window.onload = function() {
+            checkLogin();
+            initEventListeners();
+        };
+    })();
+</script>
+
+</body>
+</html>
